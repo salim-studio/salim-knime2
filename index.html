@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataFlow Studio - Visual Data Analytics</title>
+    <meta name="description"
+        content="DataFlow Studio - A visual data analytics platform with node-based workflow editor">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Top Toolbar -->
+    <header id="toolbar">
+        <div class="toolbar-left">
+            <div class="app-logo">
+                <i class="fas fa-project-diagram"></i>
+                <span>DataFlow Studio</span>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-group">
+                <button id="btn-new" class="toolbar-btn" title="مشروع جديد">
+                    <i class="fas fa-file-circle-plus"></i>
+                </button>
+                <button id="btn-open" class="toolbar-btn" title="فتح">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <button id="btn-save" class="toolbar-btn" title="حفظ">
+                    <i class="fas fa-floppy-disk"></i>
+                </button>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-group">
+                <button id="btn-undo" class="toolbar-btn" title="تراجع">
+                    <i class="fas fa-rotate-left"></i>
+                </button>
+                <button id="btn-redo" class="toolbar-btn" title="إعادة">
+                    <i class="fas fa-rotate-right"></i>
+                </button>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-group execution-group">
+                <button id="btn-run" class="toolbar-btn run-btn" title="تشغيل">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="btn-stop" class="toolbar-btn stop-btn" title="إيقاف">
+                    <i class="fas fa-stop"></i>
+                </button>
+                <button id="btn-reset" class="toolbar-btn" title="إعادة تعيين">
+                    <i class="fas fa-arrows-rotate"></i>
+                </button>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-group">
+                <button id="btn-zoom-in" class="toolbar-btn" title="تكبير">
+                    <i class="fas fa-magnifying-glass-plus"></i>
+                </button>
+                <button id="btn-zoom-out" class="toolbar-btn" title="تصغير">
+                    <i class="fas fa-magnifying-glass-minus"></i>
+                </button>
+                <button id="btn-zoom-fit" class="toolbar-btn" title="ملاءمة">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <span id="zoom-level" class="zoom-label">100%</span>
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button id="btn-lang" class="toolbar-btn lang-btn" title="تبديل اللغة">
+                <i class="fas fa-language"></i>
+                <span>EN</span>
+            </button>
+            <button id="btn-settings" class="toolbar-btn" title="إعدادات">
+                <i class="fas fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div id="main-container">
+        <!-- Sidebar Node Palette -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h3 data-i18n="nodePalette">لوحة العقد</h3>
+                <button id="btn-toggle-sidebar" class="sidebar-toggle">
+                    <i class="fas fa-angles-right"></i>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="node-search" data-i18n-placeholder="searchNodes" placeholder="بحث عن العقد...">
+            </div>
+            <div id="node-categories" class="sidebar-categories">
+                <!-- IO Category -->
+                <div class="category" data-category="io">
+                    <div class="category-header">
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-icon"><i class="fas fa-database"></i></span>
+                        <span data-i18n="cat_io">الإدخال/الإخراج</span>
+                    </div>
+                    <div class="category-nodes"></div>
+                </div>
+                <!-- Transform Category -->
+                <div class="category" data-category="transform">
+                    <div class="category-header">
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-icon"><i class="fas fa-shuffle"></i></span>
+                        <span data-i18n="cat_transform">التحويل</span>
+                    </div>
+                    <div class="category-nodes"></div>
+                </div>
+                <!-- Statistics Category -->
+                <div class="category" data-category="statistics">
+                    <div class="category-header">
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-icon"><i class="fas fa-chart-line"></i></span>
+                        <span data-i18n="cat_statistics">الإحصاء</span>
+                    </div>
+                    <div class="category-nodes"></div>
+                </div>
+                <!-- ML Category -->
+                <div class="category" data-category="ml">
+                    <div class="category-header">
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-icon"><i class="fas fa-brain"></i></span>
+                        <span data-i18n="cat_ml">تعلم الآلة</span>
+                    </div>
+                    <div class="category-nodes"></div>
+                </div>
+                <!-- Views Category -->
+                <div class="category" data-category="views">
+                    <div class="category-header">
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-icon"><i class="fas fa-chart-pie"></i></span>
+                        <span data-i18n="cat_views">العرض</span>
+                    </div>
+                    <div class="category-nodes"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Canvas Area -->
+        <main id="canvas-container">
+            <svg id="workflow-canvas">
+                <defs>
+                    <pattern id="grid-pattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="1" cy="1" r="0.5" fill="rgba(255,255,255,0.06)" />
+                    </pattern>
+                    <pattern id="grid-pattern-large" width="100" height="100" patternUnits="userSpaceOnUse">
+                        <rect width="100" height="100" fill="url(#grid-pattern)" />
+                        <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.1)" />
+                    </pattern>
+                    <!-- Arrow marker for connections -->
+                    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#6c7ae0" />
+                    </marker>
+                    <!-- Glow filter for selected nodes -->
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <!-- Drop shadow -->
+                    <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.5)" />
+                    </filter>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-pattern-large)" />
+                <!-- Connections layer -->
+                <g id="connections-layer"></g>
+                <!-- Nodes layer -->
+                <g id="nodes-layer"></g>
+                <!-- Temp connection while drawing -->
+                <g id="temp-connection-layer"></g>
+                <!-- Selection rectangle -->
+                <rect id="selection-rect" class="selection-rect" display="none" />
+            </svg>
+            <!-- Drop indicator -->
+            <div id="drop-indicator" class="drop-indicator" style="display:none;">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+        </main>
+
+        <!-- Right Properties Panel -->
+        <aside id="properties-panel">
+            <div class="panel-header">
+                <h3 data-i18n="properties">الخصائص</h3>
+                <button id="btn-close-panel" class="panel-close">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div id="panel-content" class="panel-content">
+                <div class="panel-empty">
+                    <i class="fas fa-hand-pointer"></i>
+                    <p data-i18n="selectNode">اختر عقدة لعرض خصائصها</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="results-modal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">النتائج</h3>
+                <button id="btn-close-modal" class="modal-close">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Data Entry Modal -->
+    <div id="data-entry-modal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-container modal-large">
+            <div class="modal-header">
+                <h3 data-i18n="dataEntry">إدخال البيانات</h3>
+                <div class="modal-actions">
+                    <button id="btn-add-row" class="modal-action-btn" title="إضافة صف">
+                        <i class="fas fa-plus"></i> <span data-i18n="addRow">صف</span>
+                    </button>
+                    <button id="btn-add-col" class="modal-action-btn" title="إضافة عمود">
+                        <i class="fas fa-plus"></i> <span data-i18n="addCol">عمود</span>
+                    </button>
+                    <button id="btn-import-file" class="modal-action-btn" title="استيراد ملف">
+                        <i class="fas fa-file-import"></i>
+                    </button>
+                </div>
+                <button class="modal-close" onclick="document.getElementById('data-entry-modal').style.display='none'">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div id="data-entry-body" class="modal-body">
+                <div id="spreadsheet-container" class="spreadsheet-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-data" class="btn-primary" data-i18n="saveData">حفظ البيانات</button>
+                <button id="btn-cancel-data" class="btn-secondary" data-i18n="cancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu" style="display:none;">
+        <div class="context-item" data-action="configure">
+            <i class="fas fa-sliders"></i>
+            <span data-i18n="configure">إعداد</span>
+        </div>
+        <div class="context-item" data-action="execute">
+            <i class="fas fa-play"></i>
+            <span data-i18n="executeNode">تنفيذ</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-item" data-action="duplicate">
+            <i class="fas fa-copy"></i>
+            <span data-i18n="duplicate">نسخ</span>
+        </div>
+        <div class="context-item" data-action="viewResults">
+            <i class="fas fa-eye"></i>
+            <span data-i18n="viewResults">عرض النتائج</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-item danger" data-action="delete">
+            <i class="fas fa-trash"></i>
+            <span data-i18n="delete">حذف</span>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <footer id="status-bar">
+        <div class="status-left">
+            <span id="status-message" data-i18n="ready">جاهز</span>
+        </div>
+        <div class="status-right">
+            <span id="node-count">العقد: 0</span>
+            <span class="status-divider">|</span>
+            <span id="connection-count">الروابط: 0</span>
+            <span class="status-divider">|</span>
+            <span>© 2025 salim-slimani</span>
+        </div>
+    </footer>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="file-input-csv" accept=".csv" style="display:none">
+    <input type="file" id="file-input-excel" accept=".xlsx,.xls" style="display:none">
+    <input type="file" id="file-input-workflow" accept=".json" style="display:none">
+    <input type="file" id="file-input-import" accept=".csv,.xlsx,.xls" style="display:none">
+
+    <script src="js/i18n.js"></script>
+    <script src="js/nodes.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/app-core.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
